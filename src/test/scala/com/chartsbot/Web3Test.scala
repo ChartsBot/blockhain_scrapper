@@ -5,10 +5,10 @@ import org.scalatest.BeforeAndAfterEach
 import org.scalatest.featurespec.AnyFeatureSpecLike
 import org.scalatest.matchers.should.Matchers
 import org.web3j.protocol.Web3j
-import org.web3j.protocol.core.{DefaultBlockParameter, DefaultBlockParameterNumber}
+import org.web3j.protocol.core.{ DefaultBlockParameter, DefaultBlockParameterNumber }
 
 import scala.compat.java8.FutureConverters.CompletionStageOps
-import scala.concurrent.{Await, Future}
+import scala.concurrent.{ Await, Future }
 import scala.concurrent.duration.DurationInt
 import scala.math.BigInt.javaBigInteger2bigInt
 

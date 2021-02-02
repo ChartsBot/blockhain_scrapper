@@ -6,7 +6,7 @@ import com.typesafe.scalalogging.LazyLogging
 import org.web3j.protocol.Web3j
 import org.web3j.protocol.http.HttpService
 
-import javax.inject.{Inject, Singleton}
+import javax.inject.{ Inject, Singleton }
 
 trait Web3Connector {
   val web3: Web3j

@@ -1,10 +1,10 @@
 package com.chartsbot.services
 
-import com.chartsbot.models.{SqlBlock, SqlBlocksDAO, Web3DAO}
+import com.chartsbot.models.{ SqlBlock, SqlBlocksDAO, Web3DAO }
 import com.typesafe.scalalogging.LazyLogging
 
-import javax.inject.{Inject, Singleton}
-import scala.concurrent.{Await, ExecutionContext, Future}
+import javax.inject.{ Inject, Singleton }
+import scala.concurrent.{ Await, ExecutionContext }
 import scala.concurrent.duration.DurationInt
 
 trait BlockIndexerService {
@@ -14,8 +14,7 @@ trait BlockIndexerService {
 }
 
 @Singleton
-class DefaultBlockIndexerService @Inject () (web3DAO: Web3DAO, sqlBlocksDAO: SqlBlocksDAO)(implicit val ec: ExecutionContext) extends BlockIndexerService with LazyLogging {
-
+class DefaultBlockIndexerService @Inject() (web3DAO: Web3DAO, sqlBlocksDAO: SqlBlocksDAO)(implicit val ec: ExecutionContext) extends BlockIndexerService with LazyLogging {
 
   def run(): Unit = {
     val fLastIndexedBlock = sqlBlocksDAO.getLastBlock
@@ -29,11 +28,13 @@ class DefaultBlockIndexerService @Inject () (web3DAO: Web3DAO, sqlBlocksDAO: Sql
         logger.info("Last indexed block: " + lastIndexedBlockNumber)
         val fLastBlockEth = web3DAO.getLastBlock
         fLastBlockEth map { lastBlockEth =>
-          for(i <- (lastIndexedBlockNumber + 1) to lastBlockEth) {
+          for (i <- (lastIndexedBlockNumber + 1) to lastBlockEth) {
             val res = web3DAO.getBlock(i.toInt) flatMap { newBlock =>
-              val sqlBlock = SqlBlock(number = newBlock.getBlock.getNumber.longValue(),
+              val sqlBlock = SqlBlock(
+                number = newBlock.getBlock.getNumber.longValue(),
                 hash = newBlock.getBlock.getHash,
-                blockTimestamp = newBlock.getBlock.getTimestamp.intValue())
+                blockTimestamp = newBlock.getBlock.getTimestamp.intValue()
+              )
               sqlBlocksDAO.addBlock(sqlBlock)
             }
             Await.result(res, 2.seconds)

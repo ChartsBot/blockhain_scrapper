@@ -3,11 +3,11 @@ package com.chartsbot.models
 import com.chartsbot.services.Web3Connector
 import org.web3j.protocol.Web3j
 import org.web3j.protocol.core.DefaultBlockParameterNumber
-import org.web3j.protocol.core.methods.response.{EthBlock, EthBlockNumber}
+import org.web3j.protocol.core.methods.response.EthBlock
 
-import javax.inject.{Inject, Singleton}
+import javax.inject.{ Inject, Singleton }
 import scala.compat.java8.FutureConverters.CompletionStageOps
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ ExecutionContext, Future }
 
 trait Web3DAO {
 
@@ -18,7 +18,7 @@ trait Web3DAO {
 }
 
 @Singleton
-class DefaultWeb3DAO @Inject () (web3Connector: Web3Connector)(implicit val ec: ExecutionContext) extends Web3DAO {
+class DefaultWeb3DAO @Inject() (web3Connector: Web3Connector)(implicit val ec: ExecutionContext) extends Web3DAO {
 
   val web3Client: Web3j = web3Connector.web3
 

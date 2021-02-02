@@ -1,9 +1,9 @@
 package com.chartsbot
 
-import com.chartsbot.models.{DefaultSqlBlocksDAO, DefaultWeb3DAO, SqlBlocksDAO, Web3DAO}
+import com.chartsbot.models.{ DefaultSqlBlocksDAO, DefaultWeb3DAO, SqlBlocksDAO, Web3DAO }
 import com.chartsbot.services._
 import com.google.inject.binder.ScopedBindingBuilder
-import com.google.inject.{AbstractModule, Module}
+import com.google.inject.{ AbstractModule, Module }
 import com.typesafe.config.Config
 
 import scala.concurrent.ExecutionContext
