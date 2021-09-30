@@ -19,33 +19,45 @@ trait BlockIndexerService {
 @Singleton
 class DefaultBlockIndexerService @Inject() (web3Connector: Web3Connector, sqlBlocksEthDAO: SqlBlocksEthDAO, sqlBlocksPolygonDAO: SqlBlocksPolygonDAO)(implicit val ec: ExecutionContext) extends BlockIndexerService with LazyLogging {
 
-  val initBlockNumberPolygon: Long = Await.result(sqlBlocksPolygonDAO.getLastBlock, 10.seconds) match {
+  def getLastIndexedBlockPolygon: Long = Await.result(sqlBlocksPolygonDAO.getLastBlock, 10.seconds) match {
     case Left(value) =>
       logger.error("Error getting last indexed polygon block: ", value)
       throw new Exception("Not good getting last indexed block polygon")
     case Right(value) => value.head.number
   }
 
-  val initBlockNumberEth: Long = Await.result(sqlBlocksEthDAO.getLastBlock, 10.seconds) match {
+  def getLastIndexedBlockEth: Long = Await.result(sqlBlocksEthDAO.getLastBlock, 10.seconds) match {
     case Left(value) =>
-      logger.error("Error getting last indexed eth block: ", value)
-      throw new Exception("Not good getting last indexed block eth")
+      logger.error("Error getting last indexed polygon block: ", value)
+      throw new Exception("Not good getting last indexed block polygon")
     case Right(value) => value.head.number
   }
+
+  val initBlockNumberPolygon: Long = getLastIndexedBlockPolygon
+
+  val initBlockNumberEth: Long = getLastIndexedBlockEth
 
   def run(): Unit = {
     val blockParamPolygon = new DefaultBlockParameterNumber(initBlockNumberPolygon)
     val blockParamEth = new DefaultBlockParameterNumber(initBlockNumberEth)
 
-    val goFastBlockNumberEthUntil = 12812350
-    val goFastBlockNumberPolygonUntil = 18599632
+    val goFastBlockNumberEthUntil = 13310000
+    val goFastBlockNumberPolygonUntil = 19600000
 
     var t0 = System.currentTimeMillis()
     if (initBlockNumberPolygon < goFastBlockNumberPolygonUntil) {
 
       (initBlockNumberPolygon to goFastBlockNumberPolygonUntil).filter(_ % 50 == 0).foreach { i =>
 
-        val block = web3Connector.web3Polygon.ethGetBlockByNumber(new DefaultBlockParameterNumber(i), false).send()
+        val block: EthBlock = try {
+          web3Connector.web3jPolygonHttp.ethGetBlockByNumber(new DefaultBlockParameterNumber(i), false).send()
+        } catch {
+          case e: Exception =>
+            logger.error("Catched exception: ", e)
+            Thread.sleep(2000)
+            logger.info("back on tracks")
+            web3Connector.web3jPolygonHttp.ethGetBlockByNumber(new DefaultBlockParameterNumber(i), false).send()
+        }
 
         val sqlBlock = SqlBlock(i.intValue(), block.getBlock.getTimestamp.intValue())
         val r = sqlBlocksPolygonDAO.addBlock(sqlBlock)
@@ -67,7 +79,15 @@ class DefaultBlockIndexerService @Inject() (web3Connector: Web3Connector, sqlBlo
     if (initBlockNumberEth < goFastBlockNumberEthUntil) {
       (initBlockNumberEth to goFastBlockNumberEthUntil).filter(_ % 50 == 0).foreach { i =>
 
-        val block = web3Connector.web3Eth.ethGetBlockByNumber(new DefaultBlockParameterNumber(i), false).send()
+        val block: EthBlock = try {
+          web3Connector.web3jEthHttp.ethGetBlockByNumber(new DefaultBlockParameterNumber(i), false).send()
+        } catch {
+          case e: Exception =>
+            logger.error("Catched exception: ", e)
+            Thread.sleep(2000)
+            logger.info("Back on tracks")
+            web3Connector.web3jEthHttp.ethGetBlockByNumber(new DefaultBlockParameterNumber(i), false).send()
+        }
 
         val sqlBlock = SqlBlock(i.intValue(), block.getBlock.getTimestamp.intValue())
         val r = sqlBlocksEthDAO.addBlock(sqlBlock)
@@ -85,7 +105,10 @@ class DefaultBlockIndexerService @Inject() (web3Connector: Web3Connector, sqlBlo
       }
     }
 
-    web3Connector.web3Polygon.replayPastAndFutureBlocksFlowable(blockParamPolygon, false).subscribe(
+    val blockParamPolygonNew = new DefaultBlockParameterNumber(getLastIndexedBlockPolygon)
+    val blockParamEthNew = new DefaultBlockParameterNumber(getLastIndexedBlockEth)
+
+    web3Connector.web3Polygon.replayPastAndFutureBlocksFlowable(blockParamPolygonNew, false).subscribe(
       (e: EthBlock) => {
         val blockNumber = e.getBlock.getNumber.intValue()
         val blockTs = e.getBlock.getTimestamp.intValue()
@@ -94,10 +117,13 @@ class DefaultBlockIndexerService @Inject() (web3Connector: Web3Connector, sqlBlo
           logger.info("indexed polygon: " + blockNumber.toString + " ts: " + blockTs.toString)
         } else {
         }
+      },
+      (e: Throwable) => {
+        logger.error("error handling stuff polygon", e)
       }
     )
 
-    web3Connector.web3Eth.replayPastAndFutureBlocksFlowable(blockParamEth, false).subscribe(
+    web3Connector.web3Eth.replayPastAndFutureBlocksFlowable(blockParamEthNew, false).subscribe(
       (e: EthBlock) => {
         val blockNumber = e.getBlock.getNumber.intValue()
         val blockTs = e.getBlock.getTimestamp.intValue()
@@ -106,6 +132,9 @@ class DefaultBlockIndexerService @Inject() (web3Connector: Web3Connector, sqlBlo
           logger.info("indexed eth: " + blockNumber.toString + " ts: " + blockTs.toString)
         } else {
         }
+      },
+      (e: Throwable) => {
+        logger.error("error handling stuff eth", e)
       }
     )
 

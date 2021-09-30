@@ -1,6 +1,6 @@
 package com.chartsbot
 
-import com.chartsbot.models.{ DefaultEthSqlBlocksDAO, DefaultPolygonSqlBlocksDAO, DefaultWeb3DAO, SqlBlocksEthDAO, SqlBlocksPolygonDAO, Web3DAO }
+import com.chartsbot.models.{ DefaultEthSqlBlocksDAO, DefaultPolygonSqlBlocksDAO, SqlBlocksEthDAO, SqlBlocksPolygonDAO }
 import com.chartsbot.services._
 import com.google.inject.binder.ScopedBindingBuilder
 import com.google.inject.{ AbstractModule, Module }
@@ -16,7 +16,6 @@ class Binder extends AbstractModule {
   def SqlFilesEthDao: ScopedBindingBuilder = bind(classOf[SqlBlocksEthDAO]).to(classOf[DefaultEthSqlBlocksDAO])
   def SqlFilesPolygonDao: ScopedBindingBuilder = bind(classOf[SqlBlocksPolygonDAO]).to(classOf[DefaultPolygonSqlBlocksDAO])
   def Web3Connector: ScopedBindingBuilder = bind(classOf[Web3Connector]).to(classOf[DefaultWeb3Connector])
-  def Web3DAO: ScopedBindingBuilder = bind(classOf[Web3DAO]).to(classOf[DefaultWeb3DAO])
   def BlockIndexerService: ScopedBindingBuilder = bind(classOf[BlockIndexerService]).to(classOf[DefaultBlockIndexerService])
 
   override def configure(): Unit = {
@@ -26,7 +25,6 @@ class Binder extends AbstractModule {
     SqlFilesEthDao
     SqlFilesPolygonDao
     Web3Connector
-    Web3DAO
     BlockIndexerService
   }
 

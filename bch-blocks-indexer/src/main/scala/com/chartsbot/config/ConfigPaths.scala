@@ -15,7 +15,7 @@ object ConfigPaths {
   trait Web3Paths {
     final val WEB3_ETH_HTTP_URL = "web3.eth.connection.url"
     final val WEB3_ETH_WEBSOCKET_URL = "web3.eth.connection.websocketUrl"
-    final val WEB3_POLYGON_HTTP_URL = "web3.polygon.connection.websocketUrl"
+    final val WEB3_POLYGON_HTTP_URL = "web3.polygon.connection.url"
     final val WEB3_POLYGON_WEBSOCKET_URL = "web3.polygon.connection.websocketUrl"
   }
 

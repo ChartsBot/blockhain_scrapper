@@ -22,16 +22,22 @@ public class CustomWebSocketClient extends WebSocketClient {
     private void doReconnect(){
         if(this.isClosed()){
             try {
-                System.out.println("Had to reconnect websocket");
+                log.info("Had to reconnect websocket");
+                Thread.sleep(1000);
                 this.reconnectBlocking();
                 for (ReconnectHandlerInterface handler : handlers) {
                     handler.onReconnect();
                 }
             } catch (InterruptedException e) {
+                log.info("Error in reconnect");
                 Thread.currentThread().interrupt();
                 throw new RuntimeException("Current thread needs to shutdown, Reconnect to websocket failed");
             }
         }
+//        else {
+//            String a = "5";
+////            log.info("Not close");
+//        }
     }
     public void addReconnectHandler(ReconnectHandlerInterface handler){
         handlers.add(handler);
