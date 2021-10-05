@@ -17,6 +17,8 @@ object ConfigPaths {
     final val WEB3_ETH_WEBSOCKET_URL = "web3.eth.connection.websocketUrl"
     final val WEB3_POLYGON_HTTP_URL = "web3.polygon.connection.url"
     final val WEB3_POLYGON_WEBSOCKET_URL = "web3.polygon.connection.websocketUrl"
+    final val WEB3_BSC_HTTP_URL = "web3.bsc.connection.url"
+    final val WEB3_BSC_WEBSOCKET_URL = "web3.bsc.connection.websocketUrl"
   }
 
 }

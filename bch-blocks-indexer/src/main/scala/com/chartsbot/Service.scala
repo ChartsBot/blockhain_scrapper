@@ -9,7 +9,8 @@ object Service extends InjectorHelper(List(new Binder)) {
   def main(args: Array[String]): Unit = {
 
     val environmentVars = System.getenv().asScala
-    for ((k, v) <- environmentVars) println(s"envVar: $k, value: $v")
+    val r = for ((k, v) <- environmentVars) yield s"envVar: $k, value: $v"
+    logger.info(r.toList.mkString(", "))
 
     get[BlockIndexerService].run()
   }

@@ -1,6 +1,6 @@
 //package com.chartsbot
 //
-//import com.chartsbot.models.{ SqlBlock }
+//import com.chartsbot.models.SqlBlock
 //import com.chartsbot.services.MySQLConnector
 //import io.getquill.{ CamelCase, MysqlAsyncContext }
 //import org.scalatest.BeforeAndAfterEach
