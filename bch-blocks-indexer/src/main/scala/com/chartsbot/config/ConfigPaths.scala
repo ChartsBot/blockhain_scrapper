@@ -21,4 +21,14 @@ object ConfigPaths {
     final val WEB3_BSC_WEBSOCKET_URL = "web3.bsc.connection.websocketUrl"
   }
 
+  trait ScalatraPaths {
+    final val SCALATRA_ENV = "scalatra.env"
+  }
+
+  trait ServerPaths {
+    final val SERVER_PORT = "scalatra.port"
+    final val SERVER_BASE_URL = "scalatra.base_url"
+    final val APP_VERSION = "scalatra.version"
+  }
+
 }

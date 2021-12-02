@@ -1,4 +1,4 @@
-FROM fomoinc/java-base
+FROM --platform=linux/amd64 fomoinc/java-base
 ARG JAR_LIBS
 ARG JAR_FILE
 ARG VERSION
@@ -41,3 +41,6 @@ ENTRYPOINT [ \
 COPY ${JAR_LIBS} /usr/share/service/lib
 # Add the service itself
 COPY ${JAR_FILE} /usr/share/service/main.jar
+
+HEALTHCHECK --interval=10s --timeout=10s --start-period=30s \
+    CMD curl --fail http://0.0.0.0:5001/api/v1/health/alive || exit 1

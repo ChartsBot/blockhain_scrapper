@@ -2,6 +2,7 @@ package com.chartsbot
 
 import com.chartsbot.services.BlockIndexerService
 
+import javax.inject.{ Inject, Singleton }
 import scala.collection.JavaConverters._
 
 object Service extends InjectorHelper(List(new Binder)) {
@@ -13,6 +14,14 @@ object Service extends InjectorHelper(List(new Binder)) {
     logger.info(r.toList.mkString(", "))
 
     get[BlockIndexerService].run()
+    get[ChartsBotWebserverApi].start()
   }
 
+}
+
+@Singleton
+class ChartsBotWebserverApi @Inject() (jettyServer: DefaultJettyServer) {
+  def start(): Unit = {
+    jettyServer.start()
+  }
 }

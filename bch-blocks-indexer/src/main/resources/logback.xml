@@ -16,7 +16,7 @@
     </appender>
 
     <logger name="org.web3j" level="INFO"/>
-
+    <logger name="com.chartsbot" level="DEBUG"/>
 
     <root level="INFO">
         <appender-ref ref="STDERR"/>

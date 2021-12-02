@@ -135,112 +135,113 @@ class DefaultBlockIndexerService @Inject() (web3Connector: Web3Connector, sqlBlo
     var lastBlockIndexedPolygon = getLastIndexedBlock(Polygon)
     var lastBlockIndexedEth = getLastIndexedBlock(Ethereum)
     var lastBlockIndexedBsc = getLastIndexedBlock(Bsc)
-    // Dirty stuff until new version of web3j includes this PR https://github.com/web3j/web3j/pull/1507
-    while (true) {
-      val lastBlockEth = web3DAO.getLastBlockNumber(Ethereum).longValue()
-      val lastBlockPolygon = web3DAO.getLastBlockNumber(Polygon).longValue()
-      val lastBlockBsc = web3DAO.getLastBlockNumber(Bsc).longValue()
 
-      if (lastBlockEth > lastBlockIndexedEth) {
-        for (i <- lastBlockIndexedEth + 1 to lastBlockEth) {
-          try {
-
-            logger.debug("Operating on eth block " + i)
-            val block = web3DAO.getBlock(i, SupportedChains.Ethereum)
-            val blockNumber = block.getNumber.intValue()
-            val blockTs = block.getTimestamp.intValue()
-            sqlBlocksDAO.addBlock(SqlBlock(blockNumber, blockTs))(Ethereum)
-            if (blockNumber % 500 == 0) {
-              logger.info("indexed eth: " + blockNumber.toString + " ts: " + blockTs.toString)
-            }
-          } catch {
-            case e: Throwable =>
-              logger.debug(s"Eth: error getting block $i: " + e.getMessage)
-              Thread.sleep(100)
-          }
-
-        }
-        lastBlockIndexedEth = lastBlockEth
-      }
-
-      if (lastBlockPolygon > lastBlockIndexedPolygon) {
-        for (i <- lastBlockIndexedPolygon + 1 to lastBlockPolygon) {
-          if (i % 5 == 0) {
-            try {
-              logger.debug("Operating on polygon block " + i)
-              val block = web3DAO.getBlock(i, SupportedChains.Polygon)
-              val blockNumber = block.getNumber.intValue()
-              val blockTs = block.getTimestamp.intValue()
-              sqlBlocksDAO.addBlock(SqlBlock(blockNumber, blockTs))(Polygon)
-              if (blockNumber % 500 == 0) {
-                logger.info("indexed polygon: " + blockNumber.toString + " ts: " + blockTs.toString)
-              }
-            } catch {
-              case e: Throwable =>
-                logger.debug(s"Polygon: error getting block $i: " + e.getMessage)
-                Thread.sleep(100)
-            }
-          }
-
-        }
-        lastBlockIndexedPolygon = lastBlockPolygon
-      }
-
-      if (lastBlockBsc > lastBlockIndexedBsc) {
-        for (i <- lastBlockIndexedBsc + 1 to lastBlockBsc) {
-          if (i % 5 == 0) {
-            try {
-              logger.debug("Operating on bsc block " + i)
-              val block = web3DAO.getBlock(i, SupportedChains.Bsc)
-              val blockNumber = block.getNumber.intValue()
-              val blockTs = block.getTimestamp.intValue()
-              sqlBlocksDAO.addBlock(SqlBlock(blockNumber, blockTs))(Bsc)
-              if (blockNumber % 500 == 0) {
-                logger.info("indexed bsc: " + blockNumber.toString + " ts: " + blockTs.toString)
-              }
-            } catch {
-              case e: Throwable =>
-                logger.debug(s"Bsc: error getting block $i: " + e.getMessage)
-                Thread.sleep(100)
-            }
-          }
-
-        }
-        lastBlockIndexedBsc = lastBlockBsc
-      }
-      Thread.sleep(100)
-
-    }
-
-    //    web3Connector.web3Polygon.replayPastAndFutureBlocksFlowable(blockParamPolygonNew, false).subscribe(
+    //
+    //    web3Connector.web3Polygon.replayPastAndFutureBlocksFlowable(new DefaultBlockParameterNumber(lastBlockIndexedPolygon), false).subscribe(
     //      (e: EthBlock) => {
-    //        val blockNumber = e.getBlock.getNumber.intValue()
-    //        val blockTs = e.getBlock.getTimestamp.intValue()
-    //        sqlBlocksPolygonDAO.addBlock(SqlBlock(blockNumber, blockTs))
-    //        if (blockNumber % 500 == 0) {
-    //          logger.info("indexed polygon: " + blockNumber.toString + " ts: " + blockTs.toString)
-    //        } else {
-    //        }
+    //        indexBlockOfChainInReplay(e, 5, SupportedChains.Polygon)
     //      },
     //      (e: Throwable) => {
     //        logger.error("error handling stuff polygon", e)
     //      }
     //    )
     //
-    //    web3Connector.web3Eth.replayPastAndFutureBlocksFlowable(blockParamEthNew, false).subscribe(
+    //    logger.info("started poly")
+    //
+    //    web3Connector.web3Bsc.replayPastAndFutureBlocksFlowable(new DefaultBlockParameterNumber(lastBlockIndexedBsc), false).subscribe(
     //      (e: EthBlock) => {
-    //        val blockNumber = e.getBlock.getNumber.intValue()
-    //        val blockTs = e.getBlock.getTimestamp.intValue()
-    //        sqlBlocksEthDAO.addBlock(SqlBlock(blockNumber, blockTs))
-    //        if (blockNumber % 500 == 0) {
-    //          logger.info("indexed eth: " + blockNumber.toString + " ts: " + blockTs.toString)
-    //        } else {
-    //        }
+    //        indexBlockOfChainInReplay(e, 5, SupportedChains.Bsc)
     //      },
     //      (e: Throwable) => {
-    //        logger.error("error handling stuff eth", e)
+    //        logger.error("error handling stuff bsc", e)
     //      }
     //    )
+    //
+    //    logger.info("started bsc")
+    //
+    //    web3Connector.web3Eth.replayPastAndFutureBlocksFlowable(new DefaultBlockParameterNumber(lastBlockIndexedEth), false).subscribe(
+    //      (e: EthBlock) => {
+    //        indexBlockOfChainInReplay(e, 1, SupportedChains.Ethereum)
+    //      },
+    //      (e: Throwable) => {
+    //        logger.error("error handling stuff Eth", e)
+    //      }
+    //    )
+    //
+    //    logger.info("started eth")
+    while (true) {
+      val lastBlockEth = web3DAO.getLastBlockNumber(Ethereum).longValue()
+      val lastBlockPolygon = web3DAO.getLastBlockNumber(Polygon).longValue()
+      val lastBlockBsc = web3DAO.getLastBlockNumber(Bsc).longValue()
+
+      lastBlockIndexedEth = indexBlockOfChain(lastBlockEth, lastBlockIndexedEth, 1, SupportedChains.Ethereum)
+      lastBlockIndexedPolygon = indexBlockOfChain(lastBlockPolygon, lastBlockIndexedPolygon, 5, SupportedChains.Polygon)
+      lastBlockIndexedBsc = indexBlockOfChain(lastBlockBsc, lastBlockIndexedBsc, 5, SupportedChains.Bsc)
+
+      Thread.sleep(100)
+
+    }
+
+    //            web3Connector.web3Polygon.replayPastAndFutureBlocksFlowable(new DefaultBlockParameterNumber(lastBlockIndexedPolygon), false).subscribe(
+    //              (e: EthBlock) => {
+    //                indexBlockOfChainInReplay(e, 5, SupportedChains.Polygon)
+    //              },
+    //              (e: Throwable) => {
+    //                logger.error("error handling stuff polygon", e)
+    //              }
+    //            )
+  }
+
+  /**
+    * @param lastBlock Number of the last block found on the blockchain
+    * @param lastBlockIndexed Number of the last block indexed by the service
+    * @param numBlockToKeep Period of how many blocks should be stored. 1 => store all of them, 5 => keep one in five
+    * @return
+    */
+  def indexBlockOfChain(lastBlock: Long, lastBlockIndexed: Long, numBlockToKeep: Int, chain: SupportedChains): Long = {
+    if (lastBlock > lastBlockIndexed) {
+      for (i <- lastBlockIndexed + 1 to lastBlock) {
+        if (i % numBlockToKeep == 0) {
+          try {
+            logger.debug(s"Operating on $chain block $i")
+            val block = web3DAO.getBlock(i, chain)
+            val blockNumber = block.getNumber.intValue()
+            val blockTs = block.getTimestamp.intValue()
+            sqlBlocksDAO.addBlock(SqlBlock(blockNumber, blockTs))(chain)
+            if (blockNumber % 500 == 0) {
+              logger.info(s"indexed $chain: " + blockNumber.toString + " ts: " + blockTs.toString)
+            }
+          } catch {
+            case e: Throwable =>
+              logger.debug(s"$chain: error getting block $i: " + e.getMessage)
+              Thread.sleep(100)
+          }
+        }
+
+      }
+      lastBlock
+    } else {
+      lastBlockIndexed
+    }
+  }
+
+  def indexBlockOfChainInReplay(e: EthBlock, numBlockToKeep: Int, chain: SupportedChains) = {
+    try {
+      val block = e.getBlock
+      val blockNumber = block.getNumber.intValue()
+      if (blockNumber % numBlockToKeep == 0) {
+        logger.debug(s"Operating on $chain block $blockNumber")
+        val blockTs = block.getTimestamp.intValue()
+        sqlBlocksDAO.addBlock(SqlBlock(blockNumber, blockTs))(chain)
+        if (blockNumber % 500 == 0) {
+          logger.info(s"indexed $chain: " + blockNumber.toString + " ts: " + blockTs.toString)
+        }
+      }
+    } catch {
+      case e: Throwable =>
+        logger.debug(s"$chain: error getting latest block: " + e.getMessage)
+        Thread.sleep(100)
+    }
 
   }
 
