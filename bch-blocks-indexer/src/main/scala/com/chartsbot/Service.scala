@@ -11,9 +11,14 @@ object Service extends InjectorHelper(List(new Binder)) {
 
     val environmentVars = System.getenv().asScala
     val r = for ((k, v) <- environmentVars) yield s"envVar: $k, value: $v"
-    logger.info(r.toList.mkString(", "))
+    logger.debug(r.toList.mkString(", "))
 
-    get[BlockIndexerService].run()
+    new Thread(new Runnable() {
+      override def run(): Unit = {
+        get[BlockIndexerService].run()
+      }
+    }).start()
+
     get[ChartsBotWebserverApi].start()
   }
 

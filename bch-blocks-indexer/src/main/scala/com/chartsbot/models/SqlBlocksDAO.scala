@@ -112,6 +112,8 @@ trait SqlBlocksDAO {
 
   def addBlock(block: SqlBlock)(chain: SupportedChains): Future[Either[ErrorMessage, Long]]
 
+  def areLastBlocksIndexed(secondsFrom: Int): Future[Set[Boolean]]
+
 }
 
 @Singleton
@@ -128,6 +130,31 @@ class DefaultSqlBlocksDAO @Inject() (val sqlBlocksEth: SqlBlocksEthQueries, val 
   def getLastBlock(chain: SupportedChains): Future[Either[ErrorMessage, List[SqlBlock]]] = selectChainSqlQueries(chain).getLast
 
   def addBlock(block: SqlBlock)(chain: SupportedChains): Future[Either[ErrorMessage, Long]] = selectChainSqlQueries(chain).insertBlock(block)
+
+  def areLastBlocksIndexed(secondsFrom: Int): Future[Set[Boolean]] = {
+
+    val currentTime = (System.currentTimeMillis / 1000).toInt
+
+    val r: Set[Future[Boolean]] = for (chain <- SupportedChains.values) yield {
+      getLastBlock(chain).map {
+        case Left(value) => {
+          logger.warn(s"$chain - error on healthchecks, failed to get last indexed block")
+          false
+        }
+        case Right(value) => {
+          val r = currentTime - value.head.blockTimestamp < secondsFrom
+          if (!r) {
+            logger.warn(s"$chain - error on healthchecks: last block indexed more than ${secondsFrom}s ago (ts = ${value.head.blockTimestamp}, current time = $currentTime)")
+          }
+          r
+        }
+
+
+      }
+    }
+
+    Future.sequence(r)
+  }
 
 }
 

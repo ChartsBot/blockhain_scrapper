@@ -43,4 +43,4 @@ COPY ${JAR_LIBS} /usr/share/service/lib
 COPY ${JAR_FILE} /usr/share/service/main.jar
 
 HEALTHCHECK --interval=10s --timeout=10s --start-period=30s \
-    CMD curl --fail http://0.0.0.0:5001/api/v1/health/alive || exit 1
+    CMD curl --fail http://0.0.0.0:5001/api/v1/health/alive
