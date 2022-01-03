@@ -1,17 +1,17 @@
 package com.chartsbot.services.scalatra
 
-import com.chartsbot.models.{SqlBlock, SqlBlocksDAO, SupportedChains, Web3DAO}
+import com.chartsbot.models.{ SqlBlock, SqlBlocksDAO, SupportedChains, Web3DAO }
 import com.chartsbot.models.SupportedChains.SupportedChains
 import com.github.mauricio.async.db.mysql.message.server.ErrorMessage
 import com.typesafe.config.Config
 import com.typesafe.scalalogging.LazyLogging
-import org.json4s.{DefaultFormats, Formats}
-import org.scalatra.{FutureSupport, InternalServerError, Ok, ScalatraServlet}
+import org.json4s.{ DefaultFormats, Formats }
+import org.scalatra.{ FutureSupport, InternalServerError, Ok, ScalatraServlet }
 import org.scalatra.json.NativeJsonSupport
 
 import javax.inject.Inject
 import scala.concurrent.duration.DurationInt
-import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.concurrent.{ Await, ExecutionContext, Future }
 import scala.util.Success
 
 class HealthChecks @Inject() (conf: Config, sqlBlocksDAO: SqlBlocksDAO, web3DAO: Web3DAO)(implicit val ec: ExecutionContext) extends ScalatraServlet
@@ -44,6 +44,5 @@ class HealthChecks @Inject() (conf: Config, sqlBlocksDAO: SqlBlocksDAO, web3DAO:
   }
 
   def getLastIndexedBlock(chain: SupportedChains): Either[ErrorMessage, List[SqlBlock]] = Await.result(sqlBlocksDAO.getLastBlock(chain), 10.seconds)
-
 
 }

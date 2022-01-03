@@ -32,7 +32,8 @@ class DefaultWeb3DAO @Inject() (web3Connector: Web3Connector, implicit val ec: E
   private def selectWeb3(chain: SupportedChains) = chain match {
     case com.chartsbot.models.SupportedChains.Polygon => web3Connector.web3jPolygonHttp
     case com.chartsbot.models.SupportedChains.Ethereum => web3Connector.web3jEthHttp
-    case com.chartsbot.models.SupportedChains.Bsc => web3Connector.web3Bsc
+    case com.chartsbot.models.SupportedChains.Bsc => web3Connector.web3jBscHttp
+    case com.chartsbot.models.SupportedChains.Ftm => web3Connector.web3jFtmHttp
   }
 
   def getLastBlockNumber(chain: SupportedChains): BigInteger = {

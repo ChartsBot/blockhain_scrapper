@@ -9,5 +9,6 @@ object SupportedChains extends Enumeration {
   val Polygon: models.SupportedChains.Value = Value
   val Ethereum: models.SupportedChains.Value = Value
   val Bsc: models.SupportedChains.Value = Value
+  val Ftm: models.SupportedChains.Value = Value
 
 }

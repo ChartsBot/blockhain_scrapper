@@ -106,6 +106,30 @@ class SqlBlocksBscQueries @Inject() (val sqlConnector: MySQLConnector, implicit 
 
 }
 
+@Singleton
+class SqlBlocksFtmQueries @Inject() (val sqlConnector: MySQLConnector, implicit val ec: ExecutionContext) extends SqlBlocksQueries with LazyLogging {
+
+  val ctx: MysqlAsyncContext[CamelCase.type] = sqlConnector.ctx
+
+  import ctx._
+
+  implicit val eventSchemaMeta: SchemaMeta[SqlBlock] = schemaMeta[SqlBlock]("FtmBlocks")
+
+  def getLast: Future[Either[ErrorMessage, List[SqlBlock]]] = {
+
+    val maxQuery = quote(query[SqlBlock].sortBy(b => b.number)(Ord.descNullsLast).take(1))
+
+    val f = run(maxQuery).map(Right(_))
+    SqlQueriesUtil.transformFuture(f, "SQL error getting last block ")
+  }
+
+  def insertBlock(block: SqlBlock): Future[Either[ErrorMessage, Long]] = {
+    val f = run(quote(query[SqlBlock].insert(lift(block)).onConflictIgnore)).map(Right(_))
+    SqlQueriesUtil.transformFuture(f, "SQL error inserting block ")
+  }
+
+}
+
 trait SqlBlocksDAO {
 
   def getLastBlock(chain: SupportedChains): Future[Either[ErrorMessage, List[SqlBlock]]]
@@ -117,13 +141,14 @@ trait SqlBlocksDAO {
 }
 
 @Singleton
-class DefaultSqlBlocksDAO @Inject() (val sqlBlocksEth: SqlBlocksEthQueries, val sqlBlocksPolygon: SqlBlocksPolygonQueries, val sqlBlocksBsc: SqlBlocksBscQueries, implicit val ec: ExecutionContext) extends SqlBlocksDAO with LazyLogging {
+class DefaultSqlBlocksDAO @Inject() (val sqlBlocksEth: SqlBlocksEthQueries, val sqlBlocksPolygon: SqlBlocksPolygonQueries, val sqlBlocksBsc: SqlBlocksBscQueries, val sqlBlocksFtm: SqlBlocksFtmQueries, implicit val ec: ExecutionContext) extends SqlBlocksDAO with LazyLogging {
 
   private def selectChainSqlQueries(chain: SupportedChains): SqlBlocksQueries = {
     chain match {
       case com.chartsbot.models.SupportedChains.Polygon => sqlBlocksPolygon
       case com.chartsbot.models.SupportedChains.Ethereum => sqlBlocksEth
       case com.chartsbot.models.SupportedChains.Bsc => sqlBlocksBsc
+      case com.chartsbot.models.SupportedChains.Ftm => sqlBlocksFtm
     }
   }
 
@@ -148,7 +173,6 @@ class DefaultSqlBlocksDAO @Inject() (val sqlBlocksEth: SqlBlocksEthQueries, val 
           }
           r
         }
-
 
       }
     }

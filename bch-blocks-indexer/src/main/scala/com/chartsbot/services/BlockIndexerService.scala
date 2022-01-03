@@ -1,6 +1,6 @@
 package com.chartsbot.services
 
-import com.chartsbot.models.SupportedChains.{ Bsc, Ethereum, Polygon, SupportedChains }
+import com.chartsbot.models.SupportedChains.{ Bsc, Ethereum, Ftm, Polygon, SupportedChains }
 import com.chartsbot.models.{ SqlBlock, SqlBlocksDAO, SupportedChains, Web3DAO }
 import com.typesafe.scalalogging.LazyLogging
 import org.web3j.protocol.core.DefaultBlockParameterNumber
@@ -34,11 +34,14 @@ class DefaultBlockIndexerService @Inject() (web3Connector: Web3Connector, sqlBlo
 
   val initBlockNumberBsc: Long = getLastIndexedBlock(Bsc)
 
+  val initBlockNumberFtm: Long = getLastIndexedBlock(Ftm)
+
   def run(): Unit = {
 
     val goFastBlockNumberEthUntil = 13310000
     val goFastBlockNumberPolygonUntil = 19600000
     val goFastBlockNumberBscUntil = 11461538
+    val goFastBlockNumberFtmUntil = 26880197
 
     var t0 = System.currentTimeMillis()
     if (initBlockNumberPolygon < goFastBlockNumberPolygonUntil) {
@@ -132,9 +135,42 @@ class DefaultBlockIndexerService @Inject() (web3Connector: Web3Connector, sqlBlo
       }
     }
 
+    if (initBlockNumberFtm < goFastBlockNumberFtmUntil) {
+
+      (initBlockNumberFtm to goFastBlockNumberFtmUntil).filter(_ % 100 == 0).foreach { i =>
+
+        val block: EthBlock = try {
+          web3Connector.web3jFtmHttp.ethGetBlockByNumber(new DefaultBlockParameterNumber(i), false).send()
+        } catch {
+          case e: Exception =>
+            logger.error("Catched exception: ", e)
+            Thread.sleep(2000)
+            logger.info("back on tracks")
+            web3Connector.web3jFtmHttp.ethGetBlockByNumber(new DefaultBlockParameterNumber(i), false).send()
+        }
+
+        val sqlBlock = SqlBlock(i.intValue(), block.getBlock.getTimestamp.intValue())
+        val r = sqlBlocksDAO.addBlock(sqlBlock)(Ftm)
+        Await.result(r, 10.seconds)
+
+        if (i % 1000 == 0) {
+          val t1 = t0
+          t0 = System.currentTimeMillis()
+          val time1000BlocksMs = t0 - t1
+          val remainingTime = ((goFastBlockNumberFtmUntil - i) / 1000) * (time1000BlocksMs / 1000)
+          val rTimeHour = remainingTime.toFloat / 3600.toFloat
+          logger.info(s"Ftm: processed block $i. Processed 1000 blocks in ${time1000BlocksMs}ms. Remaining time: ${remainingTime}s = ${rTimeHour}h")
+        }
+
+      }
+
+    }
+
+
     var lastBlockIndexedPolygon = getLastIndexedBlock(Polygon)
     var lastBlockIndexedEth = getLastIndexedBlock(Ethereum)
     var lastBlockIndexedBsc = getLastIndexedBlock(Bsc)
+    var lastBlockIndexedFtm = getLastIndexedBlock(Ftm)
 
     //
     //    web3Connector.web3Polygon.replayPastAndFutureBlocksFlowable(new DefaultBlockParameterNumber(lastBlockIndexedPolygon), false).subscribe(
@@ -173,10 +209,12 @@ class DefaultBlockIndexerService @Inject() (web3Connector: Web3Connector, sqlBlo
       val lastBlockEth = web3DAO.getLastBlockNumber(Ethereum).longValue()
       val lastBlockPolygon = web3DAO.getLastBlockNumber(Polygon).longValue()
       val lastBlockBsc = web3DAO.getLastBlockNumber(Bsc).longValue()
+      val lastBlockFtm = web3DAO.getLastBlockNumber(Ftm).longValue()
 
       lastBlockIndexedEth = indexBlockOfChain(lastBlockEth, lastBlockIndexedEth, 1, SupportedChains.Ethereum)
       lastBlockIndexedPolygon = indexBlockOfChain(lastBlockPolygon, lastBlockIndexedPolygon, 5, SupportedChains.Polygon)
       lastBlockIndexedBsc = indexBlockOfChain(lastBlockBsc, lastBlockIndexedBsc, 5, SupportedChains.Bsc)
+      lastBlockIndexedFtm = indexBlockOfChain(lastBlockFtm, lastBlockIndexedFtm, 10, SupportedChains.Ftm)
 
       Thread.sleep(100)
 

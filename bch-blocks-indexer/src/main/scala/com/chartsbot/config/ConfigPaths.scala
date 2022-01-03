@@ -19,6 +19,8 @@ object ConfigPaths {
     final val WEB3_POLYGON_WEBSOCKET_URL = "web3.polygon.connection.websocketUrl"
     final val WEB3_BSC_HTTP_URL = "web3.bsc.connection.url"
     final val WEB3_BSC_WEBSOCKET_URL = "web3.bsc.connection.websocketUrl"
+    final val WEB3_FTM_HTTP_URL = "web3.ftm.connection.url"
+    final val WEB3_FTM_WEBSOCKET_URL = "web3.ftm.connection.websocketUrl"
   }
 
   trait ScalatraPaths {
